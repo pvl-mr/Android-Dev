@@ -2,6 +2,7 @@ package com.example.myapplication2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -96,11 +97,26 @@ public class MainActivity extends AppCompatActivity {
     public void add(View view) {
         EditText userName = (EditText) findViewById(R.id.userName);
         String user = userName.getText().toString();
+
+        if (selectedNames.size() == 1) {
+            for(int i=0; i< selectedNames.size();i++){
+                adapter.remove(selectedNames.get(i));
+
+            }
+            namesList.clearChoices();
+
+            // очищаем массив выбраных объектов
+            selectedNames.clear();
+
+            adapter.notifyDataSetChanged();
+
+        }
         if (!user.isEmpty()) {
             adapter.add(user);
             userName.setText("");
             adapter.notifyDataSetChanged();
         }
+
     }
 
     public void remove(View view){
@@ -116,4 +132,23 @@ public class MainActivity extends AppCompatActivity {
 
         adapter.notifyDataSetChanged();
     }
+
+    /*public void search(View view) {
+        Intent intent = new Intent(this, SearchingResultActivity.class);
+*//*        intent.putExtra("names", names);*//*
+        EditText searchObj = (EditText) findViewById(R.id.searchObj);
+        String search = searchObj.getText().toString();
+        String result = "";
+        if (!search.isEmpty()) {
+            for (int i = 0; i < names.size(); i++) {
+                if (names.get(i).contains(search)) {
+                    result += names.get(i);
+                    result += ",";
+                }
+            }
+        }
+        intent.putExtra("names", result);
+        startActivity(intent);
+    }*/
+
 }

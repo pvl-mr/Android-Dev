@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
-    <ListView
+    tools:context=".SearchingResultActivity">
+
+    <TextView
         android:id="@+id/namesList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -15,14 +15,6 @@
         android:textSize="48sp"
         android:divider="#774455"
         android:dividerHeight="@dimen/twodp">
-    </ListView>
-
-    <fragment
-        android:name="com.example.myapplication2.default_fragment"
-        android:id="@+id/fr_new"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </fragment>
+    </TextView>
 
 </LinearLayout>
