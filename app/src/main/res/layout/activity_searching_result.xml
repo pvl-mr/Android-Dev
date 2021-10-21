@@ -6,15 +6,9 @@
     android:layout_height="match_parent"
     tools:context=".SearchingResultActivity">
 
-    <TextView
-        android:id="@+id/namesList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:choiceMode="multipleChoice"
-        android:textStyle="italic"
-        android:textSize="48sp"
-        android:divider="#774455"
-        android:dividerHeight="@dimen/twodp">
-    </TextView>
+    <ListView
+        android:id="@+id/searchListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>

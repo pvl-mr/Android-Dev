@@ -7,7 +7,17 @@
     android:orientation="vertical"
     tools:context="com.example.myapplication2.default_fragment">
 
-    <TextView
+   <ListView
+        android:id="@+id/namesList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:choiceMode="multipleChoice"
+        android:textStyle="italic"
+        android:textSize="48sp"
+        android:divider="#774455"
+        android:dividerHeight="@dimen/twodp">
+    </ListView>
+<!--    <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,12 +28,70 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
+        />-->
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Имя элемента:" />
+    <EditText
+        android:id="@+id/searchObj"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
         />
     <Button
-        android:id="@+id/add"
+        android:id="@+id/buttonSearch"
         android:onClick="add"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Добавить/редактировать" />
+        android:text="Найти" />
+    <Button
+        android:id="@+id/buttonAdd"
+        android:onClick="add"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Добавить" />
+    <Button
+        android:id="@+id/buttonEdit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Редактировать" />
+
+    <Button
+        android:id="@+id/buttonAllElem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Выбрать все элементы"
+        android:onClick="selectAllElem"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <Button
+            android:id="@+id/buttonReset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Сбросить"
+            android:onClick="resetAllElem"/>
+        <Button
+            android:id="@+id/buttonElemInToast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Вывести"
+            android:onClick="outputSelectElem"/>
+        <Button
+            android:id="@+id/buttonDelete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Удалить"
+            android:onClick="remove"/>
+    </LinearLayout>
+
+
+
 
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.example.myapplication2;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -7,58 +8,211 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link default_fragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+import java.util.Collections;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
 public class default_fragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    public static final ArrayList<String> names = new ArrayList<>();
+    ArrayList<String> selectedNames = new ArrayList<>();
+    public static ArrayAdapter<String> adapter;
+    ListView namesList;
+    Button buttonAllElem;
+    Button buttonSearch;
+    Button buttonAdd;
+    Button buttonReset;
+    Button buttonDelete;
+    Button buttonElemInToast;
+    Button buttonEdit;
+    EditText searchObj;
 
-    public default_fragment() {
-        // Required empty public constructor
-    }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment default_fragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static default_fragment newInstance(String param1, String param2) {
-        default_fragment fragment = new default_fragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
+    private static final String NME = "names";
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_default_fragment, container, false);
+        super.onCreate(savedInstanceState);
+
+        View view = inflater.inflate(R.layout.fragment_default_fragment, container, false);
+/*        Collections.addAll(names, "Meizu", "Xiomi", "Nokia", "Sony", "IPhone");
+        if (names.size() != 5) {
+            Collections.addAll(names, "Meizu", "Xiomi", "Nokia", "Sony", "IPhone");
+        }*/
+
+        // получаем элемент ListView
+        namesList = view.findViewById(R.id.namesList);
+
+        // создаем адаптер
+        adapter = new ArrayAdapter(view.getContext(),
+                android.R.layout.simple_list_item_multiple_choice, names);
+
+        // устанавливаем для списка адаптер
+        namesList.setAdapter(adapter);
+
+        //обработка установки и снятия отметки в списке
+        namesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                //получаем нажатый элемент
+                String name = adapter.getItem(position);
+                if (namesList.isItemChecked(position)) {
+                    selectedNames.add(name);
+                } else {
+                    selectedNames.remove(name);
+                }
+
+            }
+        });
+
+        buttonAllElem = view.findViewById(R.id.buttonAllElem);
+        buttonSearch = view.findViewById(R.id.buttonSearch);
+        searchObj = view.findViewById(R.id.searchObj);
+        buttonAdd = view.findViewById(R.id.buttonAdd);
+        buttonReset = view.findViewById(R.id.buttonReset);
+        buttonDelete = view.findViewById(R.id.buttonDelete);
+        buttonElemInToast = view.findViewById(R.id.buttonElemInToast);
+        buttonEdit = view.findViewById(R.id.buttonEdit);
+
+        buttonAllElem.setOnClickListener(v -> {
+            selectAllElem(v);
+        });
+
+        buttonSearch.setOnClickListener(v -> {
+
+            String searchString = searchObj.getText().toString().toLowerCase().trim();
+            System.out.println("searchObj " + searchString);
+            if (searchString.equals("")) {
+                Toast.makeText(v.getContext(), "Заполните поле поиска", Toast.LENGTH_LONG).show();
+                return;
+            }
+            ArrayList<String> searchResultString = new ArrayList<>();
+
+            for (int i = 0; i < names.size(); i++) {
+                if (names.get(i).toLowerCase().contains(searchString)) {
+                    searchResultString.add(names.get(i));
+                    System.out.println("NAMES " + names.get(i));
+                }
+            }
+            if (searchResultString.size() == 0) {
+                Toast.makeText(v.getContext(), "Результатов не найдено", Toast.LENGTH_LONG).show();
+                return;
+            }
+            Intent intent = new Intent(getActivity(), SearchingResultActivity.class);
+            intent.putExtra("names", searchResultString);
+            startActivity(intent);
+        });
+        buttonAllElem.setOnClickListener(v -> {
+            selectAllElem(v);
+        });
+        buttonAdd.setOnClickListener(v -> {
+            add(v);
+        });
+        buttonReset.setOnClickListener(v -> {
+            resetAllElem(v);
+        });
+        buttonDelete.setOnClickListener(v -> {
+            remove(v);
+        });
+        buttonElemInToast.setOnClickListener(v -> {
+            outputSelectElem(v);
+        });
+        buttonElemInToast.setOnClickListener(v -> {
+            outputSelectElem(v);
+        });
+        buttonEdit.setOnClickListener(v -> {
+            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            NewFragment editFragment = new NewFragment(selectedNames.get(0), names.indexOf(selectedNames.get(0)));
+            fragmentTransaction.replace(R.id.default_fragment, editFragment, "tag");
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
+        });
+        return view;
+    }
+
+
+
+    public void selectAllElem(View view){
+        for(int i = 0; i < names.size(); i++) {
+            namesList.setItemChecked(i, true);
+        }
+    }
+
+    public void resetAllElem(View view){
+        for(int i = 0; i < namesList.getCount(); i++) {
+            namesList.setItemChecked(i, false);
+        }
+    }
+
+    public void outputSelectElem(View view){
+        ArrayList<String> str = new ArrayList<String>();
+        for(int i = 0; i < namesList.getCount(); i++) {
+            if (namesList.isItemChecked(i)) {
+                str.add(namesList.getItemAtPosition(i).toString());
+            }
+        }
+        Toast.makeText(view.getContext(), str.toString(), Toast.LENGTH_LONG).show();
+    }
+
+    public void add(View view) {
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        NewFragment addFragment = new NewFragment();
+        fragmentTransaction.replace(R.id.default_fragment, addFragment, "tag");
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+
+        /*EditText userName = view.findViewById(R.id.userName);
+        String user = userName.getText().toString();
+
+        if (selectedNames.size() == 1) {
+            for(int i=0; i< selectedNames.size();i++){
+                adapter.remove(selectedNames.get(i));
+
+            }
+            namesList.clearChoices();
+
+            // очищаем массив выбраных объектов
+            selectedNames.clear();
+
+            adapter.notifyDataSetChanged();
+
+        }
+        if (!user.isEmpty()) {
+            adapter.add(user);
+            userName.setText("");
+            adapter.notifyDataSetChanged();
+        }*/
+
+    }
+
+    public void remove(View view){
+        // получаем и удаляем выделенные элементы
+        for(int i=0; i< selectedNames.size();i++){
+            adapter.remove(selectedNames.get(i));
+        }
+        // снимаем все ранее установленные отметки
+        namesList.clearChoices();
+
+        // очищаем массив выбраных объектов
+        selectedNames.clear();
+
+        adapter.notifyDataSetChanged();
+    }
+
+    public void search(View view) {
+
+
     }
 }
