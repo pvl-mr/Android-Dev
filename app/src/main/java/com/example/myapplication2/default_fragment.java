@@ -22,7 +22,6 @@ import androidx.fragment.app.FragmentTransaction;
 
 public class default_fragment extends Fragment {
 
-
     public static final ArrayList<String> names = new ArrayList<>();
     ArrayList<String> selectedNames = new ArrayList<>();
     public static ArrayAdapter<String> adapter;
@@ -36,8 +35,6 @@ public class default_fragment extends Fragment {
     Button buttonEdit;
     EditText searchObj;
 
-
-    private static final String NME = "names";
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -45,10 +42,6 @@ public class default_fragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         View view = inflater.inflate(R.layout.fragment_default_fragment, container, false);
-/*        Collections.addAll(names, "Meizu", "Xiomi", "Nokia", "Sony", "IPhone");
-        if (names.size() != 5) {
-            Collections.addAll(names, "Meizu", "Xiomi", "Nokia", "Sony", "IPhone");
-        }*/
 
         // получаем элемент ListView
         namesList = view.findViewById(R.id.namesList);
@@ -85,7 +78,7 @@ public class default_fragment extends Fragment {
         buttonEdit = view.findViewById(R.id.buttonEdit);
 
         buttonAllElem.setOnClickListener(v -> {
-            selectAllElem(v);
+            selectAllElem();
         });
 
         buttonSearch.setOnClickListener(v -> {
@@ -113,16 +106,16 @@ public class default_fragment extends Fragment {
             startActivity(intent);
         });
         buttonAllElem.setOnClickListener(v -> {
-            selectAllElem(v);
+            selectAllElem();
         });
         buttonAdd.setOnClickListener(v -> {
-            add(v);
+            add();
         });
         buttonReset.setOnClickListener(v -> {
-            resetAllElem(v);
+            resetAllElem();
         });
         buttonDelete.setOnClickListener(v -> {
-            remove(v);
+            remove();
         });
         buttonElemInToast.setOnClickListener(v -> {
             outputSelectElem(v);
@@ -141,15 +134,13 @@ public class default_fragment extends Fragment {
         return view;
     }
 
-
-
-    public void selectAllElem(View view){
+    public void selectAllElem(){
         for(int i = 0; i < names.size(); i++) {
             namesList.setItemChecked(i, true);
         }
     }
 
-    public void resetAllElem(View view){
+    public void resetAllElem(){
         for(int i = 0; i < namesList.getCount(); i++) {
             namesList.setItemChecked(i, false);
         }
@@ -165,54 +156,21 @@ public class default_fragment extends Fragment {
         Toast.makeText(view.getContext(), str.toString(), Toast.LENGTH_LONG).show();
     }
 
-    public void add(View view) {
+    public void add() {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         NewFragment addFragment = new NewFragment();
         fragmentTransaction.replace(R.id.default_fragment, addFragment, "tag");
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
-
-        /*EditText userName = view.findViewById(R.id.userName);
-        String user = userName.getText().toString();
-
-        if (selectedNames.size() == 1) {
-            for(int i=0; i< selectedNames.size();i++){
-                adapter.remove(selectedNames.get(i));
-
             }
-            namesList.clearChoices();
 
-            // очищаем массив выбраных объектов
-            selectedNames.clear();
-
-            adapter.notifyDataSetChanged();
-
-        }
-        if (!user.isEmpty()) {
-            adapter.add(user);
-            userName.setText("");
-            adapter.notifyDataSetChanged();
-        }*/
-
-    }
-
-    public void remove(View view){
-        // получаем и удаляем выделенные элементы
+    public void remove(){
         for(int i=0; i< selectedNames.size();i++){
             adapter.remove(selectedNames.get(i));
         }
-        // снимаем все ранее установленные отметки
         namesList.clearChoices();
-
-        // очищаем массив выбраных объектов
         selectedNames.clear();
-
         adapter.notifyDataSetChanged();
-    }
-
-    public void search(View view) {
-
-
     }
 }
