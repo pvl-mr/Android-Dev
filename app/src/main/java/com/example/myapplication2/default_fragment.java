@@ -242,6 +242,7 @@ public class default_fragment extends Fragment {
         adapter = new ArrayAdapter(view.getContext(),
                 android.R.layout.simple_list_item_multiple_choice, telList);
         namesList.setAdapter(adapter);
+        names = telList;
         adapter.notifyDataSetChanged();
         Log.d("telephone size ", telList.size()+"");
         for (Telephone telephone: telList) {
