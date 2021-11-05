@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Моё приложение</string>
+    <string name="save">Сохранить</string>
 </resources>

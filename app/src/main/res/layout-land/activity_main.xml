@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:text="Имя элемента:" />
     <EditText
-        android:id="@+id/userName"
+        android:id="@+id/textBoxName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
