@@ -145,6 +145,14 @@ public class default_fragment extends Fragment {
             outputSelectElem(v);
         });
         buttonEdit.setOnClickListener(v -> {
+            if (selectedNames.size() > 1) {
+                Toast.makeText(view.getContext(), "Выбранно больше одного элемента!", Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (selectedNames.size() < 1) {
+                Toast.makeText(view.getContext(), "Элемент не выбран!", Toast.LENGTH_LONG).show();
+                return;
+            }
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             Log.d("selected-names", names.indexOf(selectedNames.get(0))+"");
@@ -226,6 +234,7 @@ public class default_fragment extends Fragment {
             editor.putString(save_key + i + "", myData);
         }
         editor.apply();
+        Toast.makeText(view.getContext(), "Сохранено!", Toast.LENGTH_LONG).show();
     }
 
     private void getAll() {
@@ -244,6 +253,7 @@ public class default_fragment extends Fragment {
         namesList.setAdapter(adapter);
         names = telList;
         adapter.notifyDataSetChanged();
+        Toast.makeText(view.getContext(), "Получено!", Toast.LENGTH_LONG).show();
         Log.d("telephone size ", telList.size()+"");
         for (Telephone telephone: telList) {
             Log.d("telephone ", telephone.toString());
@@ -280,8 +290,8 @@ public class default_fragment extends Fragment {
             }
 
         } catch (JSONException | IOException e) {
-            e.printStackTrace();        }
-
-
+            e.printStackTrace();
+        }
+        Toast.makeText(view.getContext(), "Импортировано!", Toast.LENGTH_LONG).show();
     }
 }

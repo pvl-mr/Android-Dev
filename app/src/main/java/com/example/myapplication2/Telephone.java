@@ -32,6 +32,6 @@ public class Telephone {
     @Override
     public String toString() {
 
-        return "Наименование: " + getName() + ". Цена: " + getPrice() + "\nОтмечено: " + (isChecked()?"Да":"Нет");
+        return "Наименование: " + getName() + ". Цена: " + getPrice() + "\nИмеется в наличии: " + (isChecked()?"Да":"Нет");
     }
 }
