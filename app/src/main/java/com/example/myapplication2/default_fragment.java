@@ -1,12 +1,16 @@
 package com.example.myapplication2;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -53,12 +57,31 @@ public class default_fragment extends Fragment {
     View view;
     public static String type;
     private DbManager dbManager;
+    boolean bound = false;
+    ServiceConnection sConn;
+    Intent intent;
+    MyService myService;
+    final String LOG_TAG = "myLogs";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         view = inflater.inflate(R.layout.fragment_default_fragment, container, false);
+        intent = new Intent(getActivity(), MyService.class);
+        sConn = new ServiceConnection() {
+
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                Log.d(LOG_TAG, "MainActivity onServiceConnected");
+                myService = ((MyService.MyBinder) binder).getService();
+                bound = true;
+            }
+
+            public void onServiceDisconnected(ComponentName name) {
+                Log.d(LOG_TAG, "MainActivity onServiceDisconnected");
+                bound = false;
+            }
+        };
         init();
         Bundle data = getActivity().getIntent().getExtras();
         if (data.containsKey("type")) {
@@ -67,8 +90,9 @@ public class default_fragment extends Fragment {
         }
 
         if (type.equalsIgnoreCase("database")){
-            dbManager = new DbManager(getContext());
+            getActivity().startService(new Intent(getActivity(), MyService.class));
             buttonSaveAll.setVisibility(View.GONE);
+
         }
         namesList = view.findViewById(R.id.namesList);
         adapter = new ArrayAdapter(view.getContext(),
@@ -82,7 +106,22 @@ public class default_fragment extends Fragment {
                 selectedNames.remove(tel);
             }
         });
+
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        getActivity().bindService(intent, sConn, 0);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (!bound) return;
+        getActivity().unbindService(sConn);
+        bound = false;
     }
 
     public void init() {
@@ -183,7 +222,7 @@ public class default_fragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         NewFragment addFragment;
         if (type.equalsIgnoreCase("database")) {
-            addFragment = new NewFragment(dbManager);
+            addFragment = new NewFragment(myService);
         } else {
             addFragment = new NewFragment();
         }
@@ -203,15 +242,17 @@ public class default_fragment extends Fragment {
     }
 
     private void saveAllPr(){
-        pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = pref.edit();
-        Gson gson = new Gson();
-        editor.putInt("save_key_count", names.size());
-        for (int i = 0; i < names.size(); i++) {
-            String myData = gson.toJson(names.get(i));
-            editor.putString(save_key + i + "", myData);
-        }
-        editor.apply();
+        new Thread(() -> {
+            pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = pref.edit();
+            Gson gson = new Gson();
+            editor.putInt("save_key_count", names.size());
+            for (int i = 0; i < names.size(); i++) {
+                String myData = gson.toJson(names.get(i));
+                editor.putString(save_key + i + "", myData);
+            }
+            editor.apply();
+        }).start();
     }
 
     private void saveAll() {
@@ -220,25 +261,22 @@ public class default_fragment extends Fragment {
     }
 
     public void getAllFromDb() {
-        dbManager.openDb();
-        names = dbManager.getFromDb();
-        if (dbManager != null) {
-            Log.d("db manager", (dbManager.getFromDb() == null)?"null":"not null");
-        }
-        dbManager.closeDb();
+        names = myService.getTelephones();
     }
 
     public void getAllFromPr() {
         if (pref == null)
             return;
-        Gson gson = new Gson();
-        ArrayList<Telephone> telList= new ArrayList<>();
-        Integer count = pref.getInt("save_key_count", 0);
-        for (int i = 0; i < count; i++) {
-            String data = pref.getString( save_key + i + "", "empty");
-            telList.add(gson.fromJson(data, Telephone.class));
-        }
-        names = telList;
+        new Thread(() -> {
+            Gson gson = new Gson();
+            ArrayList<Telephone> telList= new ArrayList<>();
+            Integer count = pref.getInt("save_key_count", 0);
+            for (int i = 0; i < count; i++) {
+                String data = pref.getString( save_key + i + "", "empty");
+                telList.add(gson.fromJson(data, Telephone.class));
+            }
+            names = telList;
+        }).start();
     }
 
     private void getAll() {
@@ -255,36 +293,40 @@ public class default_fragment extends Fragment {
     }
 
     private void importData() {
-        String jsonString;
-        try {
-            InputStream is = view.getContext().getAssets().open("data.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            jsonString = new String(buffer, StandardCharsets.UTF_8);
-            JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray jsonArray = jsonObject.getJSONArray("telephones");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject obj = jsonArray.getJSONObject(i);
-                Telephone temp = new Telephone();
-                String name = obj.getString("name");
-                int price = obj.getInt("price");
-                boolean isAvailable = obj.getBoolean("isSelected");
-                temp.setName(name);
-                temp.setPrice(price);
-                temp.setAvailable(isAvailable);
-                if (type.equalsIgnoreCase("database")){
-                    dbManager.openDb();
-                    dbManager.insertToDb(name, price, isAvailable);
+        final Handler handler = new Handler();
+        new Thread(() -> handler.post(() -> {
+            String jsonString;
+            try {
+                InputStream is = view.getContext().getAssets().open("data.json");
+                int size = is.available();
+                byte[] buffer = new byte[size];
+                is.read(buffer);
+                is.close();
+                jsonString = new String(buffer, StandardCharsets.UTF_8);
+                JSONObject jsonObject = new JSONObject(jsonString);
+                JSONArray jsonArray = jsonObject.getJSONArray("telephones");
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    Telephone temp = new Telephone();
+                    String name = obj.getString("name");
+                    int price = obj.getInt("price");
+                    boolean isAvailable = obj.getBoolean("isSelected");
+                    temp.setName(name);
+                    temp.setPrice(price);
+                    temp.setAvailable(isAvailable);
+                    if (type.equalsIgnoreCase("database")){
+                        dbManager.openDb();
+                        dbManager.insertToDb(name, price, isAvailable);
+                    }
+                    names.add(temp);
+                    adapter.notifyDataSetChanged();
                 }
-                names.add(temp);
-                adapter.notifyDataSetChanged();
-            }
 
-        } catch (JSONException | IOException e) {
-            e.printStackTrace();
-        }
-        Toast.makeText(view.getContext(), "Импортировано!", Toast.LENGTH_LONG).show();
+            } catch (JSONException | IOException e) {
+                e.printStackTrace();
+            }
+            Toast.makeText(view.getContext(), "Импортировано!", Toast.LENGTH_LONG).show();
+        })).start();
+
     }
 }

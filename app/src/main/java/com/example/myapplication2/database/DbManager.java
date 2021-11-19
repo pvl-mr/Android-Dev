@@ -32,6 +32,13 @@ public class DbManager {
         db.insert(SettingConstants.TABLE_NAME, null, cv);
     }
 
+    public Telephone createModel(String name, int price, boolean isAvailableTemp) {
+        Telephone tel = new Telephone();
+        tel.setName(name);
+        tel.setPrice(price);
+        tel.setAvailable(isAvailableTemp);
+        return tel;
+    }
     public ArrayList<Telephone> getFromDb() {
         ArrayList<Telephone> tempList = new ArrayList<>();
         Cursor cursor = db.query(SettingConstants.TABLE_NAME, null, null,
@@ -40,11 +47,7 @@ public class DbManager {
             String name = cursor.getString(cursor.getColumnIndexOrThrow(SettingConstants.NAME));
             int price = cursor.getInt(cursor.getColumnIndexOrThrow(SettingConstants.PRICE));
             boolean isAv = (cursor.getInt(cursor.getColumnIndexOrThrow(SettingConstants.IS_AVAILABLE)) == 0)?false:true;
-            Telephone t = new Telephone();
-            t.setAvailable(isAv);
-            t.setPrice(price);
-            t.setName(name);
-            tempList.add(t);
+            tempList.add(createModel(name, price, isAv));
         }
         cursor.close();
         return tempList;

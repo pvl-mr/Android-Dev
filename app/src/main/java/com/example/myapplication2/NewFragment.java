@@ -1,5 +1,6 @@
 package com.example.myapplication2;
 import static com.example.myapplication2.default_fragment.names;
+import static com.example.myapplication2.default_fragment.type;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,7 +17,6 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.fragment.app.FragmentManager;
 
-import com.example.myapplication2.database.DbManager;
 import com.google.gson.Gson;
 
 
@@ -30,13 +30,13 @@ public class NewFragment extends Fragment {
     private SharedPreferences pref;
     private final String save_key = "save_key";
     Telephone tel;
-    private DbManager dbManager;
+    private MyService service;
 
     public NewFragment() {
     }
 
-    public NewFragment(DbManager dbManager) {
-        this.dbManager = dbManager;
+    public NewFragment(MyService service) {
+        this.service = service;
     }
 
     public NewFragment(Telephone telephone, int index) {
@@ -52,7 +52,6 @@ public class NewFragment extends Fragment {
         textBoxPrice = v.findViewById(R.id.textBoxPrice);
         checkBox = v.findViewById(R.id.cbSelected);
         btnSave = v.findViewById(R.id.add);
-
 
         if (tel != null) {
             Log.d("Telephone", tel.getName());
@@ -70,18 +69,15 @@ public class NewFragment extends Fragment {
 
     private void getListeners() {
         btnSave.setOnClickListener((view) -> {
-            if (dbManager != null) {
-                dbManager.openDb();
+            if (type.equalsIgnoreCase("database")) {
                 Telephone tel = getObj();
-                dbManager.insertToDb(tel.getName(), tel.getPrice(), tel.isAvailable());
-                dbManager.closeDb();
+                service.insertTelephone(tel.getName(), tel.getPrice(), tel.isAvailable());
             }
             Log.d("Index", (index==null)?"null":index.toString());
             if (index == null) {
                 names.add(getObj());
             } else {
                 names.set(index, getObj());
-
             }
 
             default_fragment.adapter.notifyDataSetChanged();
@@ -117,11 +113,13 @@ public class NewFragment extends Fragment {
     }
 
     private void init() {
-        pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = pref.edit();
-        Gson gson = new Gson();
-        String myData = gson.toJson(getObj());
-        editor.putString(save_key, myData);
-        editor.commit();
+        new Thread(() -> {
+            pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = pref.edit();
+            Gson gson = new Gson();
+            String myData = gson.toJson(getObj());
+            editor.putString(save_key, myData);
+            editor.commit();
+        }).start();
     }
 }
