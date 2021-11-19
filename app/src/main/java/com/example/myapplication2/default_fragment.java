@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,12 +19,12 @@ import android.widget.Toast;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.example.myapplication2.database.DbManager;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -52,40 +51,41 @@ public class default_fragment extends Fragment {
     private SharedPreferences pref;
     private final String save_key = "save_key";
     View view;
+    public static String type;
+    private DbManager dbManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         super.onCreate(savedInstanceState);
-
         view = inflater.inflate(R.layout.fragment_default_fragment, container, false);
+        init();
+        Bundle data = getActivity().getIntent().getExtras();
+        if (data.containsKey("type")) {
+            type = data.getString("type");
+            Toast.makeText(view.getContext(), "type of storage is " + type, Toast.LENGTH_SHORT).show();
+        }
 
-        // получаем элемент ListView
+        if (type.equalsIgnoreCase("database")){
+            dbManager = new DbManager(getContext());
+            buttonSaveAll.setVisibility(View.GONE);
+        }
         namesList = view.findViewById(R.id.namesList);
-
-        // создаем адаптер
         adapter = new ArrayAdapter(view.getContext(),
                 android.R.layout.simple_list_item_multiple_choice, names);
-
-        // устанавливаем для списка адаптер
         namesList.setAdapter(adapter);
-
-        //обработка установки и снятия отметки в списке
-        namesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                //получаем нажатый элемент
-                Telephone tel = adapter.getItem(position);
-                if (namesList.isItemChecked(position)) {
-                    selectedNames.add(tel);
-                } else {
-                    selectedNames.remove(tel);
-                }
-
+        namesList.setOnItemClickListener((adapterView, view, position, l) -> {
+            Telephone tel = adapter.getItem(position);
+            if (namesList.isItemChecked(position)) {
+                selectedNames.add(tel);
+            } else {
+                selectedNames.remove(tel);
             }
         });
+        return view;
+    }
 
+    public void init() {
         buttonAllElem = view.findViewById(R.id.buttonAllElem);
         buttonSearch = view.findViewById(R.id.buttonSearch);
         searchObj = view.findViewById(R.id.searchObj);
@@ -98,87 +98,61 @@ public class default_fragment extends Fragment {
         buttonGetAll = view.findViewById(R.id.buttonGetData);
         buttonImport = view.findViewById(R.id.buttonImport);
 
-        buttonAllElem.setOnClickListener(v -> {
-            selectAllElem();
-        });
+        buttonAllElem.setOnClickListener(v -> selectAllElem());
+        buttonSearch.setOnClickListener(v -> search(v));
+        buttonAllElem.setOnClickListener(v -> selectAllElem());
+        buttonAdd.setOnClickListener(v -> add());
+        buttonReset.setOnClickListener(v -> resetAllElem());
+        buttonDelete.setOnClickListener(v ->remove());
+        buttonElemInToast.setOnClickListener(v -> outputSelectElem(v));
+        buttonElemInToast.setOnClickListener(v -> outputSelectElem(v));
+        buttonEdit.setOnClickListener(v -> edit());
+        buttonSaveAll.setOnClickListener(v -> saveAll());
+        buttonSaveAll.setOnClickListener(v -> saveAll());
+        buttonGetAll.setOnClickListener(v -> getAll());
+        buttonImport.setOnClickListener(v -> importData());
+    }
 
-        buttonSearch.setOnClickListener(v -> {
-
-            String searchString = searchObj.getText().toString().toLowerCase().trim();
-            System.out.println("searchObj " + searchString);
-            if (searchString.equals("")) {
-                Toast.makeText(v.getContext(), "Заполните поле поиска", Toast.LENGTH_LONG).show();
-                return;
+    public void search(View v) {
+        String searchString = searchObj.getText().toString().toLowerCase().trim();
+        System.out.println("searchObj " + searchString);
+        if (searchString.equals("")) {
+            Toast.makeText(v.getContext(), "Заполните поле поиска", Toast.LENGTH_LONG).show();
+            return;
+        }
+        ArrayList<String> searchResultString = new ArrayList<>();
+        for (int i = 0; i < names.size(); i++) {
+            if (names.get(i).getName().toLowerCase().contains(searchString)) {
+                searchResultString.add(names.get(i).getName());
+                System.out.println("NAMES " + names.get(i));
             }
-            ArrayList<String> searchResultString = new ArrayList<>();
+        }
+        if (searchResultString.size() == 0) {
+            Toast.makeText(v.getContext(), "Результатов не найдено", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent intent = new Intent(getActivity(), SearchingResultActivity.class);
+        intent.putExtra("names", searchResultString);
+        startActivity(intent);
+    }
 
-            for (int i = 0; i < names.size(); i++) {
-                if (names.get(i).getName().toLowerCase().contains(searchString)) {
-                    searchResultString.add(names.get(i).getName());
-                    System.out.println("NAMES " + names.get(i));
-                }
-            }
-            if (searchResultString.size() == 0) {
-                Toast.makeText(v.getContext(), "Результатов не найдено", Toast.LENGTH_LONG).show();
-                return;
-            }
-            Intent intent = new Intent(getActivity(), SearchingResultActivity.class);
-            intent.putExtra("names", searchResultString);
-            startActivity(intent);
-        });
-        buttonAllElem.setOnClickListener(v -> {
-            selectAllElem();
-        });
-        buttonAdd.setOnClickListener(v -> {
-            add();
-        });
-        buttonReset.setOnClickListener(v -> {
-            resetAllElem();
-        });
-        buttonDelete.setOnClickListener(v -> {
-            remove();
-        });
-        buttonElemInToast.setOnClickListener(v -> {
-            outputSelectElem(v);
-        });
-        buttonElemInToast.setOnClickListener(v -> {
-            outputSelectElem(v);
-        });
-        buttonEdit.setOnClickListener(v -> {
-            if (selectedNames.size() > 1) {
-                Toast.makeText(view.getContext(), "Выбранно больше одного элемента!", Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (selectedNames.size() < 1) {
-                Toast.makeText(view.getContext(), "Элемент не выбран!", Toast.LENGTH_LONG).show();
-                return;
-            }
-            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            Log.d("selected-names", names.indexOf(selectedNames.get(0))+"");
-            NewFragment editFragment = new NewFragment(selectedNames.get(0), names.indexOf(selectedNames.get(0)));
-            fragmentTransaction.replace(R.id.default_fragment, editFragment, "tag");
-            fragmentTransaction.addToBackStack(null);
-            fragmentTransaction.commit();
-            namesList.setItemChecked(names.indexOf(selectedNames.get(0)), false);
-            selectedNames.clear();
-        });
-        buttonSaveAll.setOnClickListener(v -> {
-            saveAll();
-        });
-
-        buttonSaveAll.setOnClickListener(v -> {
-            saveAll();
-        });
-
-        buttonGetAll.setOnClickListener(v -> {
-            getAll();
-        });
-
-        buttonImport.setOnClickListener(v -> {
-            importData();
-        });
-        return view;
+    public void edit(){
+        if (selectedNames.size() > 1) {
+            Toast.makeText(view.getContext(), "Выбранно больше одного элемента!", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (selectedNames.size() < 1) {
+            Toast.makeText(view.getContext(), "Элемент не выбран!", Toast.LENGTH_LONG).show();
+            return;
+        }
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        NewFragment editFragment = new NewFragment(selectedNames.get(0), names.indexOf(selectedNames.get(0)));
+        fragmentTransaction.replace(R.id.default_fragment, editFragment, "tag");
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+        namesList.setItemChecked(names.indexOf(selectedNames.get(0)), false);
+        selectedNames.clear();
     }
 
     public void selectAllElem(){
@@ -207,24 +181,28 @@ public class default_fragment extends Fragment {
     public void add() {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        NewFragment addFragment = new NewFragment();
+        NewFragment addFragment;
+        if (type.equalsIgnoreCase("database")) {
+            addFragment = new NewFragment(dbManager);
+        } else {
+            addFragment = new NewFragment();
+        }
         fragmentTransaction.replace(R.id.default_fragment, addFragment, "tag");
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
-            }
+    }
 
     public void remove(){
         Log.d("size ---", selectedNames.size()+"");
         for(int i=0; i < selectedNames.size();i++){
             adapter.remove(selectedNames.get(i));
-            Log.d("selected obj ---", selectedNames.get(i).toString());
         }
         namesList.clearChoices();
         selectedNames.clear();
         adapter.notifyDataSetChanged();
     }
 
-    private void saveAll() {
+    private void saveAllPr(){
         pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         Gson gson = new Gson();
@@ -234,31 +212,46 @@ public class default_fragment extends Fragment {
             editor.putString(save_key + i + "", myData);
         }
         editor.apply();
+    }
+
+    private void saveAll() {
+        saveAllPr();
         Toast.makeText(view.getContext(), "Сохранено!", Toast.LENGTH_LONG).show();
     }
 
-    private void getAll() {
+    public void getAllFromDb() {
+        dbManager.openDb();
+        names = dbManager.getFromDb();
+        if (dbManager != null) {
+            Log.d("db manager", (dbManager.getFromDb() == null)?"null":"not null");
+        }
+        dbManager.closeDb();
+    }
+
+    public void getAllFromPr() {
         if (pref == null)
             return;
         Gson gson = new Gson();
         ArrayList<Telephone> telList= new ArrayList<>();
-        Log.d("save-key ", save_key);
         Integer count = pref.getInt("save_key_count", 0);
         for (int i = 0; i < count; i++) {
             String data = pref.getString( save_key + i + "", "empty");
             telList.add(gson.fromJson(data, Telephone.class));
         }
-        adapter = new ArrayAdapter(view.getContext(),
-                android.R.layout.simple_list_item_multiple_choice, telList);
-        namesList.setAdapter(adapter);
         names = telList;
+    }
+
+    private void getAll() {
+        if (type.equalsIgnoreCase("database")) {
+            getAllFromDb();
+        } else {
+            getAllFromPr();
+        }
+        adapter = new ArrayAdapter(view.getContext(),
+                android.R.layout.simple_list_item_multiple_choice, names);
+        namesList.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         Toast.makeText(view.getContext(), "Получено!", Toast.LENGTH_LONG).show();
-        Log.d("telephone size ", telList.size()+"");
-        for (Telephone telephone: telList) {
-            Log.d("telephone ", telephone.toString());
-        }
-        Log.d("telephone ", "--------------------");
     }
 
     private void importData() {
@@ -269,22 +262,22 @@ public class default_fragment extends Fragment {
             byte[] buffer = new byte[size];
             is.read(buffer);
             is.close();
-
             jsonString = new String(buffer, StandardCharsets.UTF_8);
-            Log.d("DATA!!!!", jsonString);
             JSONObject jsonObject = new JSONObject(jsonString);
-            Log.d("temp name", jsonObject.toString());
             JSONArray jsonArray = jsonObject.getJSONArray("telephones");
-            Log.d("temp name", jsonArray.toString());
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject obj = jsonArray.getJSONObject(i);
                 Telephone temp = new Telephone();
-                Log.d("temp name", obj.getString("name"));
-                Log.d("temp price", obj.getInt("price")+"");
-                Log.d("temp boolean", obj.getBoolean("isSelected")+"");
-                temp.setName(obj.getString("name"));
-                temp.setPrice(obj.getInt("price"));
-                temp.setChecked(obj.getBoolean("isSelected"));
+                String name = obj.getString("name");
+                int price = obj.getInt("price");
+                boolean isAvailable = obj.getBoolean("isSelected");
+                temp.setName(name);
+                temp.setPrice(price);
+                temp.setAvailable(isAvailable);
+                if (type.equalsIgnoreCase("database")){
+                    dbManager.openDb();
+                    dbManager.insertToDb(name, price, isAvailable);
+                }
                 names.add(temp);
                 adapter.notifyDataSetChanged();
             }

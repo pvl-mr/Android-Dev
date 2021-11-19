@@ -32,7 +32,7 @@ public class ListAdapter extends ArrayAdapter<Telephone> {
 
         name.setText(telephoneList.get(position).getName());
         price.setText(telephoneList.get(position).getPrice());
-        isAvailable.setChecked(telephoneList.get(position).isChecked());
+        isAvailable.setChecked(telephoneList.get(position).isAvailable());
         return itemView;
     }
 }

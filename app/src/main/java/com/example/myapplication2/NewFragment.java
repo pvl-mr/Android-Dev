@@ -16,6 +16,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.fragment.app.FragmentManager;
 
+import com.example.myapplication2.database.DbManager;
 import com.google.gson.Gson;
 
 
@@ -29,14 +30,13 @@ public class NewFragment extends Fragment {
     private SharedPreferences pref;
     private final String save_key = "save_key";
     Telephone tel;
+    private DbManager dbManager;
 
     public NewFragment() {
-        // Required empty public constructor
     }
 
-    public NewFragment(String text, int index) {
-        this.index = index;
-        textItem = text;
+    public NewFragment(DbManager dbManager) {
+        this.dbManager = dbManager;
     }
 
     public NewFragment(Telephone telephone, int index) {
@@ -57,66 +57,71 @@ public class NewFragment extends Fragment {
         if (tel != null) {
             Log.d("Telephone", tel.getName());
             Log.d("Telephone", tel.getPrice()+"");
-            Log.d("Telephone", tel.isChecked()+"");
+            Log.d("Telephone", tel.isAvailable()+"");
             textBoxName.setText(tel.getName());
             textBoxPrice.setText(tel.getPrice()+"");
-            checkBox.setChecked(tel.isChecked());
+            checkBox.setChecked(tel.isAvailable());
         }
 
         getListeners();
         init();
-        // Inflate the layout for this fragment
         return v;
-        }
+    }
 
-        private void getListeners() {
-            btnSave.setOnClickListener((view) -> {
-                Log.d("Index", (index==null)?"null":index.toString());
-                if (index == null) {
-                    names.add(getObj());
-                } else {
-                    names.set(index, getObj());
-                }
-
-                default_fragment.adapter.notifyDataSetChanged();
-                textBoxName.setText("");
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-                fm.popBackStack();
-            });
-
-        }
-
-        private Telephone getObj() {
-            Telephone telephone = new Telephone();
-            System.out.println(textBoxPrice.getText().toString().trim());
-            try
-            {
-                String name = textBoxName.getText().toString().trim();
-                int price = Integer.parseInt(textBoxPrice.getText().toString().trim());
-                boolean isSelected = checkBox.isChecked();
-                Log.d("Telephone!!!", name);
-                Log.d("Telephone!!!", price + "");
-                Log.d("Telephone!!!", isSelected + "");
-                telephone.setName(name);
-                telephone.setPrice(price);
-                telephone.setChecked(isSelected);
+    private void getListeners() {
+        btnSave.setOnClickListener((view) -> {
+            if (dbManager != null) {
+                dbManager.openDb();
+                Telephone tel = getObj();
+                dbManager.insertToDb(tel.getName(), tel.getPrice(), tel.isAvailable());
+                dbManager.closeDb();
             }
-            catch (NumberFormatException nfe)
-            {
-                System.out.println("NumberFormatException: " + nfe.getMessage());
-            } catch (Exception e){
-                System.out.println("Exception: " + e.getMessage());
+            Log.d("Index", (index==null)?"null":index.toString());
+            if (index == null) {
+                names.add(getObj());
+            } else {
+                names.set(index, getObj());
+
             }
-            return telephone;
-        }
 
-        private void init() {
-            pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = pref.edit();
-            Gson gson = new Gson();
-            String myData = gson.toJson(getObj());
-            editor.putString(save_key, myData);
-            editor.commit();
-        }
+            default_fragment.adapter.notifyDataSetChanged();
+            textBoxName.setText("");
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+            fm.popBackStack();
+        });
 
+    }
+
+    private Telephone getObj() {
+        Telephone telephone = new Telephone();
+        System.out.println(textBoxPrice.getText().toString().trim());
+        try
+        {
+            String name = textBoxName.getText().toString().trim();
+            int price = Integer.parseInt(textBoxPrice.getText().toString().trim());
+            boolean isSelected = checkBox.isChecked();
+            Log.d("Telephone!!!", name);
+            Log.d("Telephone!!!", price + "");
+            Log.d("Telephone!!!", isSelected + "");
+            telephone.setName(name);
+            telephone.setPrice(price);
+            telephone.setAvailable(isSelected);
+        }
+        catch (NumberFormatException nfe)
+        {
+            System.out.println("NumberFormatException: " + nfe.getMessage());
+        } catch (Exception e){
+            System.out.println("Exception: " + e.getMessage());
+        }
+        return telephone;
+    }
+
+    private void init() {
+        pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        Gson gson = new Gson();
+        String myData = gson.toJson(getObj());
+        editor.putString(save_key, myData);
+        editor.commit();
+    }
 }
