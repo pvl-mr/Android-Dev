@@ -315,8 +315,7 @@ public class default_fragment extends Fragment {
                     temp.setPrice(price);
                     temp.setAvailable(isAvailable);
                     if (type.equalsIgnoreCase("database")){
-                        dbManager.openDb();
-                        dbManager.insertToDb(name, price, isAvailable);
+                        myService.insertTelephone(name, price, isAvailable);
                     }
                     names.add(temp);
                     adapter.notifyDataSetChanged();

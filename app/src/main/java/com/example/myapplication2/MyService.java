@@ -33,6 +33,12 @@ public class MyService extends Service {
         return dbManager;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        closeDB();
+    }
+
     public void closeDB()
     {
         dbManager.closeDb();
@@ -57,5 +63,4 @@ public class MyService extends Service {
             return MyService.this;
         }
     }
-
 }
