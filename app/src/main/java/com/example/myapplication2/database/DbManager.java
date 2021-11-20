@@ -53,6 +53,14 @@ public class DbManager {
         return tempList;
     }
 
+    public void beginTransaction() {
+        db.beginTransaction();
+    }
+
+    public void endTransaction(){
+        db.endTransaction();
+    }
+
     public void closeDb() {
         dbHelper.close();
     }

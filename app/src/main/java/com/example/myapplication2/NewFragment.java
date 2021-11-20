@@ -70,8 +70,13 @@ public class NewFragment extends Fragment {
     private void getListeners() {
         btnSave.setOnClickListener((view) -> {
             if (type.equalsIgnoreCase("database")) {
-                Telephone tel = getObj();
-                service.insertTelephone(tel.getName(), tel.getPrice(), tel.isAvailable());
+                service.beginTransaction();
+                try {
+                    Telephone tel = getObj();
+                    service.insertTelephone(tel.getName(), tel.getPrice(), tel.isAvailable());
+                } finally {
+                    service.endTransaction();
+                }
             }
             Log.d("Index", (index==null)?"null":index.toString());
             if (index == null) {

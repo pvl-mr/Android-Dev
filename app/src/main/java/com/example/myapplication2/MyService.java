@@ -58,6 +58,13 @@ public class MyService extends Service {
         return binder;
     }
 
+    public void beginTransaction(){
+        dbManager.beginTransaction();
+    }
+
+    public void endTransaction(){
+        dbManager.endTransaction();
+    }
     class MyBinder extends Binder {
         MyService getService() {
             return MyService.this;
