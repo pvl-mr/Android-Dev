@@ -263,12 +263,10 @@ public class default_fragment extends Fragment {
 
     private void importData() {
         String jsonString;
-        try {
-            InputStream is = view.getContext().getAssets().open("data.json");
+        try (InputStream is = getResources().getAssets().open("data.json")){
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
-            is.close();
 
             jsonString = new String(buffer, StandardCharsets.UTF_8);
             Log.d("DATA!!!!", jsonString);
