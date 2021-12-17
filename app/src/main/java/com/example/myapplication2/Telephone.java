@@ -1,5 +1,7 @@
 package com.example.myapplication2;
 
+import java.util.Objects;
+
 public class Telephone {
     private String name;
     private int price;
@@ -33,5 +35,18 @@ public class Telephone {
     public String toString() {
 
         return "Наименование: " + getName() + ". Цена: " + getPrice() + "\nИмеется в наличии: " + (isAvailable()?"Да":"Нет");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Telephone telephone = (Telephone) o;
+        return price == telephone.price && isAvailable == telephone.isAvailable && Objects.equals(name, telephone.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, price, isAvailable);
     }
 }

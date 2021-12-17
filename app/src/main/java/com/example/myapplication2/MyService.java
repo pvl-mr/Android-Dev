@@ -52,10 +52,13 @@ public class MyService extends Service {
         dbManager.insertToDb(name, price, isAvailable);
     }
 
-
     public IBinder onBind(Intent arg0) {
         Log.d(LOG_TAG, "MyService onBind");
         return binder;
+    }
+
+    public void insertTelephone(Telephone telephone){
+        dbManager.insertToDb(telephone);
     }
 
     public void beginTransaction(){

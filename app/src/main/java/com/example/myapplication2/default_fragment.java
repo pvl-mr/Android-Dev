@@ -62,6 +62,8 @@ public class default_fragment extends Fragment {
     Intent intent;
     MyService myService;
     final String LOG_TAG = "myLogs";
+    public static String pref_name = "pref";
+    int count = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -242,8 +244,9 @@ public class default_fragment extends Fragment {
     }
 
     private void saveAllPr(){
+
         new Thread(() -> {
-            pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
+            pref = getActivity().getSharedPreferences(pref_name, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = pref.edit();
             Gson gson = new Gson();
             editor.putInt("save_key_count", names.size());
@@ -253,6 +256,7 @@ public class default_fragment extends Fragment {
             }
             editor.apply();
         }).start();
+        Toast.makeText(view.getContext(), "Saved", Toast.LENGTH_LONG).show();
     }
 
     private void saveAll() {
@@ -265,31 +269,36 @@ public class default_fragment extends Fragment {
     }
 
     public void getAllFromPr() {
-        if (pref == null)
-            return;
-        new Thread(() -> {
-            Gson gson = new Gson();
-            ArrayList<Telephone> telList= new ArrayList<>();
-            Integer count = pref.getInt("save_key_count", 0);
-            for (int i = 0; i < count; i++) {
-                String data = pref.getString( save_key + i + "", "empty");
-                telList.add(gson.fromJson(data, Telephone.class));
-            }
-            names = telList;
-        }).start();
+
     }
 
     private void getAll() {
         if (type.equalsIgnoreCase("database")) {
             getAllFromDb();
         } else {
-            getAllFromPr();
+            SharedPreferences saved_pref = getActivity().getSharedPreferences(pref_name, Context.MODE_PRIVATE);
+            if (saved_pref == null)
+                return;
+            new Thread(() -> {
+                Gson gson = new Gson();
+                ArrayList<Telephone> telList= new ArrayList<>();
+                Integer count = saved_pref.getInt("save_key_count", 0);
+                for (int i = 0; i < count; i++) {
+                    String data = saved_pref.getString( save_key + i + "", "empty");
+                    telList.add(gson.fromJson(data, Telephone.class));
+                }
+                names = telList;
+            }).start();
+        }
+        try  {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         adapter = new ArrayAdapter(view.getContext(),
                 android.R.layout.simple_list_item_multiple_choice, names);
         namesList.setAdapter(adapter);
         adapter.notifyDataSetChanged();
-        Toast.makeText(view.getContext(), "Получено!", Toast.LENGTH_LONG).show();
     }
 
     private void importData() {

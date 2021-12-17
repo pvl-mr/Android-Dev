@@ -54,9 +54,6 @@ public class NewFragment extends Fragment {
         btnSave = v.findViewById(R.id.add);
 
         if (tel != null) {
-            Log.d("Telephone", tel.getName());
-            Log.d("Telephone", tel.getPrice()+"");
-            Log.d("Telephone", tel.isAvailable()+"");
             textBoxName.setText(tel.getName());
             textBoxPrice.setText(tel.getPrice()+"");
             checkBox.setChecked(tel.isAvailable());
@@ -70,19 +67,15 @@ public class NewFragment extends Fragment {
     private void getListeners() {
         btnSave.setOnClickListener((view) -> {
             if (type.equalsIgnoreCase("database")) {
-                service.beginTransaction();
-                try {
-                    Telephone tel = getObj();
-                    service.insertTelephone(tel.getName(), tel.getPrice(), tel.isAvailable());
-                } finally {
-                    service.endTransaction();
-                }
+                Log.d("size before adding ", service.getTelephones().size()+"");
+                service.insertTelephone(getTelephone());
+                Log.d("size after adding ", service.getTelephones().size()+"");
             }
             Log.d("Index", (index==null)?"null":index.toString());
             if (index == null) {
-                names.add(getObj());
+                names.add(getTelephone());
             } else {
-                names.set(index, getObj());
+                names.set(index, getTelephone());
             }
 
             default_fragment.adapter.notifyDataSetChanged();
@@ -93,7 +86,7 @@ public class NewFragment extends Fragment {
 
     }
 
-    private Telephone getObj() {
+    private Telephone getTelephone() {
         Telephone telephone = new Telephone();
         System.out.println(textBoxPrice.getText().toString().trim());
         try
@@ -122,7 +115,7 @@ public class NewFragment extends Fragment {
             pref = getActivity().getSharedPreferences("pref", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = pref.edit();
             Gson gson = new Gson();
-            String myData = gson.toJson(getObj());
+            String myData = gson.toJson(getTelephone());
             editor.putString(save_key, myData);
             editor.commit();
         }).start();

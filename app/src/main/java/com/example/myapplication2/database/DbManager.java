@@ -32,6 +32,15 @@ public class DbManager {
         db.insert(SettingConstants.TABLE_NAME, null, cv);
     }
 
+    public void insertToDb(Telephone telephone) {
+        int isAvailable = (telephone.isAvailable() == true) ? 1 : 0;
+        ContentValues cv = new ContentValues();
+        cv.put(SettingConstants.NAME, telephone.getName());
+        cv.put(SettingConstants.PRICE, telephone.getPrice());
+        cv.put(SettingConstants.IS_AVAILABLE, isAvailable);
+        db.insert(SettingConstants.TABLE_NAME, null, cv);
+    }
+
     public Telephone createModel(String name, int price, boolean isAvailableTemp) {
         Telephone tel = new Telephone();
         tel.setName(name);
